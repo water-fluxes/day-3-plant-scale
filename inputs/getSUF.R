@@ -6,7 +6,7 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
   ####################################################
   # F?licien Meunier, 06/2017
   # 
-  # table_data <- rootsystem
+  # table_data <- rootsystem2
   # table_cond <- conductivities
   # table_soil <- soil
   # table_data <-  fread("www/rootsystem2.txt", header = T)
@@ -21,6 +21,11 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
   
   setDT(table_data)
   
+  table_data <- table_data %>% 
+    mutate(length = sqrt((x2-x1)^2 + (y2-y1)^2 + (z2-z1)^2 )) %>% 
+    select(node1ID, node2ID, branchID, x1, y1, z1, x2, y2, z2, radius, length, time, type)
+  
+  
   
   # Reconnect the nodals
   first <- table_data[table_data$node1ID == 0,]
@@ -34,7 +39,6 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
                              x2 = temp$x1, y2 = temp$y1, z2 = temp$z1,
                              radius = temp$radius,
                              length = sqrt((first$x1-temp$x1)^2 + (first$y1-temp$y1)^2 + (first$z1-temp$z1)^2 ),
-                             R = 0, G = 0, B = 0,
                              time = temp$time,
                              type = temp$type)
     table_data <- rbind(table_data, connection)
@@ -59,7 +63,7 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
   
   Psi_sr_homogeneous <- -300      # Homogeneous soil-root potential 
   Psi_sr_heterogeneous <- -3000   # Heterogeneous soil-root potential 
-
+  
   ####################################################
   # Interpolates kr,kx functions
   
@@ -70,14 +74,14 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
   
   kr=matrix(0,Nseg,1) # radial conductivity of the segments
   kx=matrix(0,Nseg,1) # Axial conductance of the segments
-
+  
   # Linear interpolation
   for ( i in 1:length(order_uni)) {
-
+    
     pos = is.element(order,order_uni[i])
     od <- order_uni[i]
     #if(od == 4) od <- 1 # if nodal, take value for primary
-
+    
     
     x = table_cond$x[table_cond$order_id == od & table_cond$type == "kr"]
     y = table_cond$y[table_cond$order_id == od & table_cond$type == "kr"]
@@ -87,7 +91,7 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
     xout = data.frame(seg_age[pos])
     temp=data.frame(approx(x,y,xout[,1]))
     kr[pos]=temp[,2]
-
+    
     x = table_cond$x[table_cond$order_id == od & table_cond$type == "kx"]
     y = table_cond$y[table_cond$order_id == od & table_cond$type == "kx"]
     x <- c(x, 5000)
@@ -99,7 +103,7 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
   # Combination of hydraulics and geomitric properties
   kappa=sqrt(2*pi*r*kr*kx)  # kappa
   tau=sqrt(2*pi*r*kr/kx)    # tau
-
+  
   # print(mean(r))
   # print(r[1]) 
   # print(mean(kr))
@@ -110,7 +114,7 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
   # print(kappa[1])
   # print(mean(tau))
   # print(tau[1])
- 
+  
   # -----------------------
   # -----------------------
   # -----------------------
@@ -165,7 +169,7 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
   b <- B[-1] # b matrix = B without the first line
   
   prev_collar <- (prev==0)
-
+  
   b[prev_collar] <- b[prev_collar] - (Psi_collar * (kappa[prev_collar] / sinh(tau[prev_collar] * l[prev_collar])))
   
   ####################################################
@@ -180,7 +184,7 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
   Jr <- 2*kappa*tanh(tau*l/2)*(Psi_sr-(Psi_proximal+Psi_basal)/2) # Total radial flow
   Jxl <- kappa*((Psi_basal-Psi_sr)/sinh(tau*l)-(Psi_proximal-Psi_sr)/tanh(tau*l)); # Axial flow at the top of the segments
   
-
+  
   remove(a, b, A, B)
   
   # Macroscopic solution
@@ -209,7 +213,7 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
     table_soil <- rbind(table_soil, data.table(id = nrow(table_soil)+1, z = -1000, psi = table_soil$psi[nrow(table_soil)]))
     
     Psi_sr <- data.frame(approx(table_soil$z, table_soil$psi, z))[,2]
-  
+    
     ####################################################
     # Build Matrices
     A = Matrix(c(0),nrow=Nseg+1,ncol=Nseg+1,sparse = TRUE) # Matrix A sparse
@@ -268,7 +272,7 @@ getSUF <- function(table_data, table_cond, table_soil, hetero = TRUE, Psi_collar
     Psi_proximal[prev_collar]=Psi_collar; 
     Jr = 2*kappa*tanh(tau*l/2)*(Psi_sr-(Psi_proximal+Psi_basal)/2) # Total radial flow
     Jxl = kappa*((Psi_basal-Psi_sr)/sinh(tau*l)-(Psi_proximal-Psi_sr)/tanh(tau*l)); # Axial flow at the top of the segments
-  
+    
     Tact=sum(Jr) 		 # Actual transpiration
     
     remove(a, b, A, B)
