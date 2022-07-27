@@ -13,3 +13,9 @@ ShinyApp : [https://plantmodelling.shinyapps.io/shinyRootBox/](https://plantmode
 MARSHAL is developped in R and can directly be used in any R compliant interface. Example in this binder : 
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/water-fluxes/day-3-plant-scale-marshal/HEAD)
+
+
+### TODOS
+
+- check R dependencies, it take too long to load (tidyverse not necessary ? )
+- add tes tin the notebook
