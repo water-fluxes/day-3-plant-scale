@@ -1,4 +1,4 @@
-install.packages("tidyverse")
+install.packages("ggplot2")
 install.packages("plyr")
 install.packages("readr")
 install.packages("data.table")
