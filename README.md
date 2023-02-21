@@ -6,7 +6,7 @@ MARSHAL takes to output of CPlantBox (the root architecture file) top compute th
 
 For a first try, we will use a user-friendly web interface to get to know the different parameters of the model.
 
-ShinyApp : [https://plantmodelling.shinyapps.io/shinyRootBox/](https://plantmodelling.shinyapps.io/marshal/)
+ShinyApp : [https://plantmodelling.shinyapps.io/marshal/](https://plantmodelling.shinyapps.io/marshal/)
 
 ## R interface
 
